@@ -61,6 +61,13 @@ func (a Adapter) Get(id string) (domain.Order, error) {
 }
 
 func (a Adapter) Save(order *domain.Order) error {
+	// Se já tem ID, apenas atualiza o status (update)
+	if order.ID != 0 {
+		res := a.db.Model(&Order{}).Where("id = ?", order.ID).Update("status", order.Status)
+		return res.Error
+	}
+
+	// Novo pedido: insert completo
 	var orderItems []OrderItem
 	for _, orderItem := range order.OrderItems {
 		orderItems = append(orderItems, OrderItem{

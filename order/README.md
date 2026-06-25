@@ -281,6 +281,63 @@ Se o `order_id` for retornado na resposta, a comunicação entre os microsservi�
 
 ---
 
+> **Parte 3:** tratamento de erros gRPC e atualização de status do pedido.
+
+## Tratamento de Erros (Parte 3)
+
+### Validação de quantidade máxima de itens (Order)
+
+O microsserviço Order passou a validar se o número total de itens do pedido (somando as quantidades de cada `OrderItem`) é maior que **50**. Caso seja, a requisição é rejeitada antes de qualquer acesso ao banco, retornando:
+
+- **Status gRPC:** `INVALID_ARGUMENT`
+- **Mensagem:** `"Order cannot have more than 50 items in total."`
+
+### Validação de valor máximo (Payment)
+
+O microsserviço Payment rejeita cobranças com `total_price > 1000`, retornando:
+
+- **Status gRPC:** `INVALID_ARGUMENT`
+- **Mensagem:** `"Payment over 1000 is not allowed."`
+
+O adapter gRPC do Payment também distingue erros internos: qualquer erro que não seja `INVALID_ARGUMENT` é encapsulado em um erro com código `INTERNAL`.
+
+### Atualização de status do pedido
+
+Após o fluxo de `PlaceOrder`, o campo `Status` do pedido é atualizado no banco de dados:
+
+| Situação | Status salvo |
+|---|---|
+| Cobrança efetuada com sucesso | `"Paid"` |
+| Erro em qualquer etapa (Payment ou interno) | `"Canceled"` |
+
+O status inicial do pedido ao ser criado continua sendo `"Pending"` (definido em `domain.NewOrder`).
+
+### Exemplo de teste com grpcurl
+
+```bash
+# Teste valor > 1000 (erro do Payment)
+grpcurl \
+  -plaintext \
+  -d '{"costumer_id":1,"order_items":[{"product_code":"PROD1","quantity":1,"unit_price":1500}]}' \
+  localhost:3000 \
+  Order/Create
+
+# Teste mais de 50 itens (erro do Order)
+grpcurl \
+  -plaintext \
+  -d '{"costumer_id":1,"order_items":[{"product_code":"PROD1","quantity":51,"unit_price":5}]}' \
+  localhost:3000 \
+  Order/Create
+
+# Teste pedido válido (deve retornar order_id e status "Paid")
+grpcurl \
+  -plaintext \
+  -d '{"costumer_id":1,"order_items":[{"product_code":"PROD1","quantity":2,"unit_price":10}]}' \
+  localhost:3000 \
+  Order/Create
+```
+---
+
 ## Tecnologias
 
 - [Go](https://golang.org/) 1.22+

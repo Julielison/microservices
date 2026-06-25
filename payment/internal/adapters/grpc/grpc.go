@@ -20,7 +20,7 @@ func (a Adapter) Create(ctx context.Context, request *payment.CreatePaymentReque
 	if code == codes.InvalidArgument {
 		return nil, err
 	} else if err != nil {
-		return nil, status.New(codes.Internal, fmt.Sprintf("failed to charge. %v ", err)).Err()
+		return nil, status.New(codes.Internal, fmt.Sprintf("failed to charge. %v", err)).Err()
 	}
 	return &payment.CreatePaymentResponse{PaymentId: result.ID}, nil
 }
