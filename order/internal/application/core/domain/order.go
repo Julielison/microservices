@@ -24,3 +24,13 @@ func NewOrder(customerId int64, orderItems []OrderItem) Order {
 		OrderItems: orderItems,
 	}
 }
+
+// TotalPrice calcula o valor total do pedido, somando o preço unitário
+// multiplicado pela quantidade de cada item do pedido.
+func (o *Order) TotalPrice() float32 {
+	var totalPrice float32
+	for _, orderItem := range o.OrderItems {
+		totalPrice += orderItem.UnitPrice * float32(orderItem.Quantity)
+	}
+	return totalPrice
+}
