@@ -145,6 +145,7 @@ A struct `Application` só conhece `ports.DBPort` e `ports.PaymentPort` — nunc
 
 - `NewAdapter(paymentServiceUrl)` abre uma conexão gRPC com o serviço Payment (sem TLS, usando `insecure.NewCredentials()`) e inicializa o stub `payment.PaymentClient`
 - `Charge(order *domain.Order)` monta um `CreatePaymentRequest` com `UserId`, `OrderId` e `TotalPrice` (calculado por `order.TotalPrice()`) e invoca o método `Create` do serviço Payment
+- **(Parte 4)** A conexão é configurada com interceptor de retry automático; cada chamada possui deadline individual de 2 segundos
 
 ### `internal/adapters/db/db.go`
 **Adapter de saída** MySQL com GORM:
@@ -265,7 +266,7 @@ grpcurl \
   Order/Create
 ```
 
-Se o `order_id` for retornado na resposta, a comunicação entre os microsserviços **Order** e **Payment** ocorreu com sucesso. O tratamento detalhado de erros de cobrança (ex.: pagamento recusado) será implementado em partes posteriores da prática.
+Se o `order_id` for retornado na resposta, a comunicação entre os microsserviços **Order** e **Payment** ocorreu com sucesso.
 
 ---
 
@@ -273,15 +274,14 @@ Se o `order_id` for retornado na resposta, a comunicação entre os microsservi�
 
 | Pacote | Versão | Uso |
 |---|---|---|
-| `google.golang.org/grpc` | v1.63.2 | Framework gRPC |
+| `google.golang.org/grpc` | v1.81.1 | Framework gRPC |
+| `github.com/grpc-ecosystem/go-grpc-middleware` | v1.4.0 | **(Parte 4)** Interceptor de retry com backoff linear |
 | `gorm.io/gorm` | v1.25.9 | ORM para acesso ao banco |
 | `gorm.io/driver/mysql` | v1.5.6 | Driver MySQL para o GORM |
 | `github.com/ruandg/microservices-proto/golang/order` | local | Stubs gerados pelo protobuf (Order) |
 | `github.com/ruandg/microservices-proto/golang/payment` | local | **(Parte 2)** Stubs gerados pelo protobuf (Payment) |
 
 ---
-
-> **Parte 3:** tratamento de erros gRPC e atualização de status do pedido.
 
 ## Tratamento de Erros (Parte 3)
 
@@ -312,30 +312,98 @@ Após o fluxo de `PlaceOrder`, o campo `Status` do pedido é atualizado no banco
 
 O status inicial do pedido ao ser criado continua sendo `"Pending"` (definido em `domain.NewOrder`).
 
-### Exemplo de teste com grpcurl
+### Exemplos de teste com grpcurl (Parte 3)
 
 ```bash
 # Teste valor > 1000 (erro do Payment)
-grpcurl \
-  -plaintext \
+grpcurl -plaintext \
   -d '{"costumer_id":1,"order_items":[{"product_code":"PROD1","quantity":1,"unit_price":1500}]}' \
-  localhost:3000 \
-  Order/Create
+  localhost:3000 Order/Create
 
 # Teste mais de 50 itens (erro do Order)
-grpcurl \
-  -plaintext \
+grpcurl -plaintext \
   -d '{"costumer_id":1,"order_items":[{"product_code":"PROD1","quantity":51,"unit_price":5}]}' \
-  localhost:3000 \
-  Order/Create
+  localhost:3000 Order/Create
 
 # Teste pedido válido (deve retornar order_id e status "Paid")
-grpcurl \
-  -plaintext \
+grpcurl -plaintext \
   -d '{"costumer_id":1,"order_items":[{"product_code":"PROD1","quantity":2,"unit_price":10}]}' \
-  localhost:3000 \
-  Order/Create
+  localhost:3000 Order/Create
 ```
+
+---
+
+## Comunicação Resiliente (Parte 4)
+
+### Timeout por chamada
+
+Cada chamada ao microsserviço Payment possui um **deadline individual de 2 segundos**, criado dentro da função `Charge` do adapter de pagamento:
+
+```go
+ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+defer cancel()
+```
+
+Se o serviço Payment não responder dentro desse prazo, a chamada é cancelada automaticamente pelo runtime do gRPC e um erro com código `DeadlineExceeded` é retornado. O adapter trata esse caso imprimindo uma mensagem de log específica:
+
+```go
+if status.Code(err) == codes.DeadlineExceeded {
+    log.Printf("[Payment] Timeout (DeadlineExceeded) ao cobrar o pedido %d do cliente %d: %v",
+        order.ID, order.CustomerID, err)
+}
+```
+
+> **Nota sobre contextos encadeados:** quando um mesmo contexto é reutilizado em chamadas subsequentes, o deadline é compartilhado entre todas elas. Neste projeto optamos por criar um contexto novo a cada chamada, garantindo 2 segundos exclusivos para cada requisição ao Payment.
+
+### Retransmissão automática (retry com backoff)
+
+A conexão com o serviço Payment é configurada com um **interceptor de retry** via `go-grpc-middleware`. O interceptor é adicionado em `NewAdapter`, antes de `grpc.Dial`:
+
+```go
+grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(
+    grpc_retry.WithCodes(codes.Unavailable, codes.ResourceExhausted),
+    grpc_retry.WithMax(5),
+    grpc_retry.WithBackoff(grpc_retry.BackoffLinear(time.Second)),
+))
+```
+
+| Parâmetro | Valor | Significado |
+|---|---|---|
+| `WithCodes` | `Unavailable`, `ResourceExhausted` | Códigos de erro que disparam nova tentativa |
+| `WithMax` | `5` | Número máximo de tentativas (incluindo a primeira) |
+| `WithBackoff` | `BackoffLinear(1s)` | Janela de espera cresce 1 segundo a cada falha |
+
+O backoff linear dessincroniza chamadas concorrentes de múltiplos clientes, evitando que todos retentem ao mesmo tempo e agravem a sobrecarga do servidor.
+
+### Instalando a nova dependência
+
+```bash
+cd microservices/order
+go get github.com/grpc-ecosystem/go-grpc-middleware@v1.4.0
+go mod tidy
+```
+
+### Tabela consolidada de erros (Partes 3 e 4)
+
+| Situação | Código gRPC | Status do pedido |
+|---|---|---|
+| Total de itens > 50 | `INVALID_ARGUMENT` | não salvo (rejeição antecipada) |
+| Valor > 1000 (Payment) | `INVALID_ARGUMENT` | `"Canceled"` |
+| Timeout na chamada ao Payment | `DEADLINE_EXCEEDED` | `"Canceled"` + log de aviso |
+| Serviço Payment indisponível | `UNAVAILABLE` | até 5 retentativas; se esgotar, `"Canceled"` |
+| Erro interno | `INTERNAL` | `"Canceled"` |
+| Sucesso | — | `"Paid"` |
+
+### Simulando falhas (Parte 4)
+
+```bash
+# Simular timeout: pare o serviço Payment e faça uma requisição normal.
+# O Order aguardará 2 segundos, tentará até 5 vezes (Unavailable) e retornará erro.
+grpcurl -plaintext \
+  -d '{"costumer_id":1,"order_items":[{"product_code":"PROD1","quantity":2,"unit_price":10}]}' \
+  localhost:3000 Order/Create
+```
+
 ---
 
 ## Tecnologias
@@ -346,3 +414,4 @@ grpcurl \
 - [GORM](https://gorm.io/)
 - [MySQL](https://www.mysql.com/)
 - [Docker](https://www.docker.com/) (para os bancos de dados em desenvolvimento)
+- [go-grpc-middleware](https://github.com/grpc-ecosystem/go-grpc-middleware) **(Parte 4)**
