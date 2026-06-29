@@ -1,0 +1,70 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: postgres
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ppostgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  payment:
+    build:
+      context: ..
+      dockerfile: microservices/payment/Dockerfile
+    restart: on-failure
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      ENV: production
+      APPLICATION_PORT: "8081"
+      DATA_SOURCE_URL: "root:postgres@tcp(mysql:3306)/payment?charset=utf8mb4&parseTime=True&loc=Local"
+    ports:
+      - "8081:8081"
+
+  shipping:
+    build:
+      context: ..
+      dockerfile: microservices/shipping/Dockerfile
+    restart: on-failure
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      ENV: production
+      APPLICATION_PORT: "8082"
+      DATA_SOURCE_URL: "root:postgres@tcp(mysql:3306)/shipping?charset=utf8mb4&parseTime=True&loc=Local"
+    ports:
+      - "8082:8082"
+
+  order:
+    build:
+      context: ..
+      dockerfile: microservices/order/Dockerfile
+    restart: on-failure
+    depends_on:
+      mysql:
+        condition: service_healthy
+      payment:
+        condition: service_started
+      shipping:
+        condition: service_started
+    environment:
+      ENV: production
+      APPLICATION_PORT: "3000"
+      DATA_SOURCE_URL: "root:postgres@tcp(mysql:3306)/order?charset=utf8mb4&parseTime=True&loc=Local"
+      PAYMENT_SERVICE_URL: "payment:8081"
+      SHIPPING_SERVICE_URL: "shipping:8082"
+    ports:
+      - "3000:3000"
+
+volumes:
+  mysql_data:

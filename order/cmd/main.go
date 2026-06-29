@@ -5,11 +5,9 @@ import (
 
 	"github.com/ruandg/microservices/order/config"
 	"github.com/ruandg/microservices/order/internal/adapters/db"
-	"github.com/ruandg/microservices/order/internal/adapters/payment"
-
-	//"github.com/ruandg/microservices/order/internal/adapters/rest"
-	"github.com/ruandg/microservices/order/internal/adapters/grpc"
-
+	grpcadapter "github.com/ruandg/microservices/order/internal/adapters/grpc"
+	payment_adapter "github.com/ruandg/microservices/order/internal/adapters/payment"
+	shipping_adapter "github.com/ruandg/microservices/order/internal/adapters/shipping"
 	"github.com/ruandg/microservices/order/internal/application/core/api"
 )
 
@@ -24,7 +22,12 @@ func main() {
 		log.Fatalf("Failed to initialize payment stub. Error: %v", err)
 	}
 
-	application := api.NewApplication(dbAdapter, paymentAdapter)
-	grpcAdapter := grpc.NewAdapter(application, config.GetApplicationPort())
+	shippingAdapter, err := shipping_adapter.NewAdapter(config.GetShippingServiceUrl())
+	if err != nil {
+		log.Fatalf("Failed to initialize shipping stub. Error: %v", err)
+	}
+
+	application := api.NewApplication(dbAdapter, paymentAdapter, shippingAdapter)
+	grpcAdapter := grpcadapter.NewAdapter(application, config.GetApplicationPort())
 	grpcAdapter.Run()
 }

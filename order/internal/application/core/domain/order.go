@@ -9,11 +9,12 @@ type OrderItem struct {
 }
 
 type Order struct {
-	ID         int64       `json:"id"`
-	CustomerID int64       `json:"customer_id"`
-	Status     string      `json:"status"`
-	OrderItems []OrderItem `json:"order_items"`
-	CreatedAt  int64       `json:"created_at"`
+	ID               int64       `json:"id"`
+	CustomerID       int64       `json:"customer_id"`
+	Status           string      `json:"status"`
+	OrderItems       []OrderItem `json:"order_items"`
+	DeliveryDeadline int32       `json:"delivery_deadline"` // dias; preenchido após shipping
+	CreatedAt        int64       `json:"created_at"`
 }
 
 func NewOrder(customerId int64, orderItems []OrderItem) Order {
@@ -25,8 +26,7 @@ func NewOrder(customerId int64, orderItems []OrderItem) Order {
 	}
 }
 
-// TotalPrice calcula o valor total do pedido, somando o preço unitário
-// multiplicado pela quantidade de cada item do pedido.
+// TotalPrice calcula o valor total do pedido.
 func (o *Order) TotalPrice() float32 {
 	var totalPrice float32
 	for _, orderItem := range o.OrderItems {
