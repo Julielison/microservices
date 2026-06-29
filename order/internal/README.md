@@ -151,9 +151,9 @@ Produtos disponíveis por padrão após o seed:
 | `github.com/grpc-ecosystem/go-grpc-middleware` | v1.4.0 | Retry com backoff linear |
 | `gorm.io/gorm` | v1.25.9 | ORM |
 | `gorm.io/driver/mysql` | v1.5.6 | Driver MySQL |
-| `github.com/ruandg/microservices-proto/golang/order` | local | Stubs Order |
-| `github.com/ruandg/microservices-proto/golang/payment` | local | Stubs Payment |
-| `github.com/ruandg/microservices-proto/golang/shipping` | local | Stubs Shipping |
+| `github.com/Julielison/microservices-proto/golang/order` | local | Stubs Order |
+| `github.com/Julielison/microservices-proto/golang/payment` | local | Stubs Payment |
+| `github.com/Julielison/microservices-proto/golang/shipping` | local | Stubs Shipping |
 
 ---
 

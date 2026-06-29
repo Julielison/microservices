@@ -1,6 +1,6 @@
 package ports
 
-import "github.com/ruandg/microservices/order/internal/application/core/domain"
+import "github.com/Julielison/microservices/order/internal/application/core/domain"
 
 // ShippingPort define a interface que o núcleo da aplicação usa
 // para solicitar o envio de um pedido ao microsserviço Shipping.

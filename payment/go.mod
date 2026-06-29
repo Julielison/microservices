@@ -2,9 +2,8 @@ module github.com/huseyinbabal/microservices/payment
 
 go 1.25.0
 
-require github.com/ruandg/microservices-proto/golang/payment v0.0.0-00010101000000-000000000000
-
 require (
+	github.com/Julielison/microservices-proto/golang/payment v0.0.0-20260629234724-f7a323502e08
 	github.com/sirupsen/logrus v1.9.0
 	github.com/uptrace/opentelemetry-go-extra/otelgorm v0.3.2
 	go.opentelemetry.io/otel v1.43.0
@@ -34,5 +33,3 @@ require (
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
-
-replace github.com/ruandg/microservices-proto/golang/payment => ../../microservices-proto/golang/payment

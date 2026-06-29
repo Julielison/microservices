@@ -3,8 +3,8 @@ package api
 import (
 	"context"
 
-	"github.com/ruandg/microservices/shipping/internal/application/core/domain"
-	"github.com/ruandg/microservices/shipping/internal/ports"
+	"github.com/Julielison/microservices/shipping/internal/application/core/domain"
+	"github.com/Julielison/microservices/shipping/internal/ports"
 )
 
 type Application struct {

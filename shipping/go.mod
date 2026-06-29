@@ -1,9 +1,9 @@
-module github.com/ruandg/microservices/shipping
+module github.com/Julielison/microservices/shipping
 
 go 1.25.0
 
 require (
-	github.com/ruandg/microservices-proto/golang/shipping v0.0.0-00010101000000-000000000000
+	github.com/Julielison/microservices-proto/golang/shipping v0.0.0-20260629234724-f7a323502e08
 	google.golang.org/grpc v1.81.1
 	gorm.io/driver/mysql v1.5.6
 	gorm.io/gorm v1.25.9
@@ -19,5 +19,3 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
-
-replace github.com/ruandg/microservices-proto/golang/shipping => ../../microservices-proto/golang/shipping

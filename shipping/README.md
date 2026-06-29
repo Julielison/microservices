@@ -110,4 +110,4 @@ Resposta esperada (7 unidades → 2 dias):
 | `google.golang.org/grpc` | v1.81.1 | Framework gRPC |
 | `gorm.io/gorm` | v1.25.9 | ORM |
 | `gorm.io/driver/mysql` | v1.5.6 | Driver MySQL |
-| `github.com/ruandg/microservices-proto/golang/shipping` | local | Stubs gerados pelo protobuf |
+| `github.com/Julielison/microservices-proto/golang/shipping` | local | Stubs gerados pelo protobuf |

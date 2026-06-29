@@ -17,8 +17,8 @@ services:
 
   payment:
     build:
-      context: ..
-      dockerfile: microservices/payment/Dockerfile
+      context: ./payment
+      dockerfile: Dockerfile
     restart: on-failure
     depends_on:
       mysql:
@@ -32,8 +32,8 @@ services:
 
   shipping:
     build:
-      context: ..
-      dockerfile: microservices/shipping/Dockerfile
+      context: ./shipping
+      dockerfile: Dockerfile
     restart: on-failure
     depends_on:
       mysql:
@@ -47,8 +47,8 @@ services:
 
   order:
     build:
-      context: ..
-      dockerfile: microservices/order/Dockerfile
+      context: ./order
+      dockerfile: Dockerfile
     restart: on-failure
     depends_on:
       mysql:

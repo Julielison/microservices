@@ -1,8 +1,8 @@
 package api
 
 import (
-	"github.com/ruandg/microservices/order/internal/application/core/domain"
-	"github.com/ruandg/microservices/order/internal/ports"
+	"github.com/Julielison/microservices/order/internal/application/core/domain"
+	"github.com/Julielison/microservices/order/internal/ports"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

@@ -6,10 +6,10 @@ import (
 	"log"
 	"net"
 
-	"github.com/ruandg/microservices-proto/golang/order"
-	"github.com/ruandg/microservices/order/config"
-	"github.com/ruandg/microservices/order/internal/application/core/domain"
-	"github.com/ruandg/microservices/order/internal/ports"
+	"github.com/Julielison/microservices-proto/golang/order"
+	"github.com/Julielison/microservices/order/config"
+	"github.com/Julielison/microservices/order/internal/application/core/domain"
+	"github.com/Julielison/microservices/order/internal/ports"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )

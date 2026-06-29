@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ruandg/microservices/shipping/internal/application/core/domain"
+	"github.com/Julielison/microservices/shipping/internal/application/core/domain"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

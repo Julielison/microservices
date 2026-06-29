@@ -1,12 +1,12 @@
 FROM golang:1.25 AS builder
-WORKDIR /usr/src/app
+WORKDIR /workspace
 
-COPY microservices-proto/ /microservices-proto/
-COPY microservices/order/ .
+# Copia o código do serviço
+COPY . .
 
 RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o order ./cmd/main.go
 
-FROM scratch
-COPY --from=builder /usr/src/app/order ./order
-CMD ["./order"]
+FROM gcr.io/distroless/static:nonroot
+COPY --from=builder /workspace/order /order
+ENTRYPOINT ["/order"]

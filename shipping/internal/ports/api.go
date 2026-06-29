@@ -3,7 +3,7 @@ package ports
 import (
 	"context"
 
-	"github.com/ruandg/microservices/shipping/internal/application/core/domain"
+	"github.com/Julielison/microservices/shipping/internal/application/core/domain"
 )
 
 type APIPort interface {

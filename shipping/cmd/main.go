@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 
-	"github.com/ruandg/microservices/shipping/config"
-	"github.com/ruandg/microservices/shipping/internal/adapters/db"
-	grpcadapter "github.com/ruandg/microservices/shipping/internal/adapters/grpc"
-	"github.com/ruandg/microservices/shipping/internal/application/core/api"
+	"github.com/Julielison/microservices/shipping/config"
+	"github.com/Julielison/microservices/shipping/internal/adapters/db"
+	grpcadapter "github.com/Julielison/microservices/shipping/internal/adapters/grpc"
+	"github.com/Julielison/microservices/shipping/internal/application/core/api"
 )
 
 func main() {
