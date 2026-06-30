@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: shipping
+  namespace: microservices
+  labels:
+    service: shipping
+spec:
+  clusterIP: None
+  selector:
+    service: shipping
+  ports:
+    - name: grpc
+      port: 8082
+      targetPort: 8082
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shipping
+  namespace: microservices
+  labels:
+    service: shipping
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: shipping
+  template:
+    metadata:
+      labels:
+        service: shipping
+    spec:
+      initContainers:
+        - name: wait-mysql
+          image: busybox:1.28
+          command:
+            - sh
+            - -c
+            - "until nslookup mysql.microservices.svc.cluster.local; do echo waiting for mysql; sleep 5; done"
+      containers:
+        - name: shipping
+          image: shipping:latest         # substitua pelo seu registry, ex: docker.io/user/shipping:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ENV
+              value: "production"
+            - name: APPLICATION_PORT
+              value: "8082"
+            - name: DATA_SOURCE_URL
+              value: "root:postgres@tcp(mysql:3306)/shipping?charset=utf8mb4&parseTime=True&loc=Local"
+          ports:
+            - containerPort: 8082

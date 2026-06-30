@@ -166,17 +166,17 @@ eval $(minikube docker-env)
 
 ### 3. Construir as imagens dentro do minikube
 
-> Execute a partir da pasta **pai** que contém tanto `microservices/` quanto `microservices-proto/`.
+> Execute a partir da raiz do repositório `microservices/`.
 
 ```bash
 # Payment
-docker build -f microservices/payment/Dockerfile -t payment:latest .
+docker build -t payment:latest ./payment
 
 # Shipping
-docker build -f microservices/shipping/Dockerfile -t shipping:latest .
+docker build -t shipping:latest ./shipping
 
 # Order
-docker build -f microservices/order/Dockerfile -t order:latest .
+docker build -t order:latest ./order
 ```
 
 ### 4. Aplicar os manifests

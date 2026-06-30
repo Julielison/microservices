@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: seed-stock
+  namespace: microservices
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-mysql
+          image: busybox:1.28
+          command:
+            - sh
+            - -c
+            - "until nslookup mysql.microservices.svc.cluster.local; do echo waiting for mysql; sleep 5; done"
+      containers:
+        - name: seed
+          image: mysql:8.0
+          env:
+            - name: MYSQL_PWD
+              value: postgres
+          command:
+            - sh
+            - -c
+            - |
+              mysql -h mysql -u root <<'SQL'
+              USE \`order\`;
+              INSERT IGNORE INTO stock_items (created_at, updated_at, deleted_at, product_code, description, unit_price)
+              VALUES
+                (NOW(), NOW(), NULL, 'ABC123', 'Produto A',  10.50),
+                (NOW(), NOW(), NULL, 'XYZ789', 'Produto B',  20.00),
+                (NOW(), NOW(), NULL, 'PROD001','Produto C',   5.00),
+                (NOW(), NOW(), NULL, 'PROD002','Produto D',  15.75),
+                (NOW(), NOW(), NULL, 'PROD003','Produto E',  99.99);
+              SQL
