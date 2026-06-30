@@ -7,7 +7,7 @@ import (
 
 	"github.com/Julielison/microservices-proto/golang/payment"
 	"github.com/Julielison/microservices/order/internal/application/core/domain"
-	grpc_retry "github.com/g
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"

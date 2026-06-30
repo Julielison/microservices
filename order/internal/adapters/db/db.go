@@ -12,7 +12,7 @@ import (
 // Deve ser populado manualmente ou via seed antes de aceitar pedidos.
 type StockItem struct {
 	gorm.Model
-	ProductCode string `gorm:"uniqueIndex;not null"`
+	ProductCode string `gorm:"uniqueIndex;not null;type:varchar(255)"`
 	Description string
 	UnitPrice   float32
 }
