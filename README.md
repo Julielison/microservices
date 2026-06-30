@@ -131,6 +131,13 @@ docker compose up --build
 # (em outro terminal) Popular o estoque após os containers subirem
 docker compose exec -T mysql mysql -u root -ps3cr3t < seed-stock.sql
 
+# (Opcional) Verificar se o estoque foi populado corretamente
+# Entre no MySQL do container:
+docker compose exec mysql mysql -u root -ps3cr3t order
+# Em seguida, no prompt do MySQL, execute:
+# mysql> SELECT * FROM stock_items;
+# mysql> exit
+
 # Parar tudo
 docker compose down -v
 ```
