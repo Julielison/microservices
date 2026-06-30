@@ -179,38 +179,58 @@ docker build -t shipping:latest ./shipping
 docker build -t order:latest ./order
 ```
 
-### 4. Aplicar os manifests
+### 4. Criar atalho para o kubectl (caso não tenha instalado)
+
+Se você não tiver o `kubectl` nativo na máquina, use a versão embutida no minikube rodando:
+```bash
+alias kubectl="minikube kubectl --"
+```
+
+### 5. Aplicar os manifests
 
 ```bash
-kubectl apply -f microservices/k8s/namespace.yaml
-kubectl apply -f microservices/k8s/mysql.yaml
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/mysql.yaml
 # Aguardar o MySQL ficar pronto
 kubectl wait --namespace microservices \
   --for=condition=ready pod \
   --selector=app=mysql \
   --timeout=120s
 
-kubectl apply -f microservices/k8s/payment.yaml
-kubectl apply -f microservices/k8s/shipping.yaml
-kubectl apply -f microservices/k8s/order.yaml
+kubectl apply -f k8s/payment.yaml
+kubectl apply -f k8s/shipping.yaml
+kubectl apply -f k8s/order.yaml
 ```
 
-### 5. Popular o estoque
+### 6. Popular o estoque
 
 ```bash
-kubectl apply -f microservices/k8s/seed-stock.yaml
+kubectl apply -f k8s/seed-stock.yaml
 # Acompanhar o Job
 kubectl logs -n microservices job/seed-stock
 ```
 
-### 6. Verificar os pods
+### 7. Verificar os pods
 
 ```bash
 kubectl get pods -n microservices
 # Todos devem estar Running/Completed
 ```
 
-### 7. Testar via port-forward
+### 8. Verificar o Banco de Dados (Opcional)
+
+Para validar a criação dos pedidos e a tabela de estoque, conecte-se ao banco dentro do cluster:
+```bash
+kubectl exec -it -n microservices deploy/mysql -- mysql -u root -ppostgres order
+```
+No prompt do MySQL (`mysql>`), execute as consultas desejadas:
+```sql
+SELECT * FROM stock_items;
+SELECT id, customer_id, status FROM orders;
+exit
+```
+
+### 9. Testar via port-forward
 
 ```bash
 kubectl port-forward -n microservices svc/order 3000:3000
@@ -240,7 +260,7 @@ grpcurl -plaintext \
   localhost:3000 Order/Create
 ```
 
-### 8. Remover o cluster
+### 10. Remover o cluster
 
 ```bash
 kubectl delete namespace microservices

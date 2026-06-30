@@ -25,7 +25,7 @@ spec:
             - -c
             - |
               mysql -h mysql -u root <<'SQL'
-              USE \`order\`;
+              USE `order`;
               INSERT IGNORE INTO stock_items (created_at, updated_at, deleted_at, product_code, description, unit_price)
               VALUES
                 (NOW(), NOW(), NULL, 'ABC123', 'Produto A',  10.50),
